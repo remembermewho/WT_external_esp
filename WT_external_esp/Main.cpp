@@ -31,6 +31,7 @@ int main()
     while (true)
     {   
         system("cls");
+        //test comment
         Vector3 localPosition{};
         Vector3 cameraPosition{};
 
