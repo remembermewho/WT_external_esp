@@ -81,6 +81,9 @@
     <ClCompile Include="Utils\WindowUtils.cpp">
       <Filter>Исходные файлы\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="ESP\UnitESP.cpp">
+      <Filter>Исходные файлы\ESP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ESP\ConsoleESP.h">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="Utils\WindowUtils.h">
       <Filter>Исходные файлы\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ESP\UnitESP.h">
+      <Filter>Исходные файлы\ESP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

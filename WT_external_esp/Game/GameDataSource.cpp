@@ -149,7 +149,9 @@ bool GameDataSource::GetUnitList(std::uintptr_t gameContext, std::uintptr_t& uni
 // READ SINGLE UNIT
 // ============================================================
 
-bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
+bool GameDataSource::ReadUnit(
+    std::uintptr_t unitAddress,
+    UnitInfo& outUnit)
 {
     if (unitAddress == 0)
         return false;
@@ -157,39 +159,59 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
 
     if (offsets::Unit::m_Position == 0)
     {
-        std::cout << "[GameDataSource] Position offset not configured\n";
+        std::cout
+            << "[GameDataSource] Position offset not configured\n";
 
         return false;
     }
 
-    outUnit.id = unitAddress;
+
+    outUnit.id =
+        unitAddress;
+
 
     // ========================================================
     // POSITION
     // ========================================================
-    //
-    // Unit
-    //  +
-    // Position member offset
-    //  ↓
-    // Vector3
-    //
 
-    if (!memory.Read(unitAddress + offsets::Unit::m_Position, outUnit.position))
+    if (!memory.Read(
+        unitAddress + offsets::Unit::m_Position,
+        outUnit.position))
     {
         return false;
     }
 
-    /*std::cout
-        << "[DEBUG] Unit 0x"
-        << std::hex << unitAddress
-        << std::dec
-        << " Position: "
-        << "X=" << outUnit.position.x
-        << " Y=" << outUnit.position.y
-        << " Z=" << outUnit.position.z
-        << '\n';*/
 
+    // ========================================================
+    // BOUNDING BOX
+    // ========================================================
+
+    if (!memory.Read(
+        unitAddress + offsets::Unit::m_BBMin,
+        outUnit.bbMin))
+    {
+        return false;
+    }
+
+
+    if (!memory.Read(
+        unitAddress + offsets::Unit::m_BBMax,
+        outUnit.bbMax))
+    {
+        return false;
+    }
+
+
+    // ========================================================
+    // ROTATION
+    // ========================================================
+
+    if (!memory.Read(
+        unitAddress + offsets::Unit::m_RotationMatrix,
+        outUnit.rotation))
+    {
+        return false;
+    }
 
 
     // ========================================================
@@ -198,25 +220,21 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
 
     if (offsets::Unit::m_TeamNum != 0)
     {
-        /*
-            Важный момент:
-
-            если поле в исходном layout является int8_t,
-            нельзя читать его сразу как int.
-
-            int = 4 bytes
-            int8_t = 1 byte
-        */
-
         std::int8_t team = 0;
 
-        if (!memory.Read(unitAddress + offsets::Unit::m_TeamNum, team))
+
+        if (!memory.Read(
+            unitAddress + offsets::Unit::m_TeamNum,
+            team))
         {
             return false;
         }
 
-        outUnit.team = static_cast<int>(team);
+
+        outUnit.team =
+            static_cast<int>(team);
     }
+
 
     // ========================================================
     // STATE
@@ -226,13 +244,19 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
     {
         std::int8_t state = 0;
 
-        if (!memory.Read(unitAddress + offsets::Unit::m_UnitState, state))
+
+        if (!memory.Read(
+            unitAddress + offsets::Unit::m_UnitState,
+            state))
         {
             return false;
         }
 
-        outUnit.state = static_cast<int>(state);
+
+        outUnit.state =
+            static_cast<int>(state);
     }
+
 
     // ========================================================
     // TYPE
@@ -242,13 +266,52 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
     {
         std::int8_t type = 0;
 
-        if (!memory.Read(unitAddress + offsets::Unit::m_UnitType, type))
+
+        if (!memory.Read(
+            unitAddress + offsets::Unit::m_UnitType,
+            type))
         {
             return false;
         }
 
-        outUnit.type = static_cast<int>(type);
+
+        outUnit.type =
+            static_cast<int>(type);
     }
+
+
+    // ========================================================
+    // FLAGS
+    // ========================================================
+    //
+    // Пока диагностические поля.
+    // Если чтение одного из них не удалось,
+    // Unit всё равно оставляем валидным.
+    // ========================================================
+
+    memory.Read(
+        unitAddress + offsets::Unit::m_UnitFlags1,
+        outUnit.flags1
+    );
+
+
+    memory.Read(
+        unitAddress + offsets::Unit::m_UnitFlags2,
+        outUnit.flags2
+    );
+
+
+    memory.Read(
+        unitAddress + offsets::Unit::m_UnitFlags3,
+        outUnit.flags3
+    );
+
+
+    memory.Read(
+        unitAddress + offsets::Unit::m_UnitFlags4,
+        outUnit.flags4
+    );
+
 
     return true;
 }

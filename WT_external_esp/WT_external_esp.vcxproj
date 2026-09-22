@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ESP\ConsoleESP.cpp" />
+    <ClCompile Include="ESP\UnitESP.cpp" />
     <ClCompile Include="Game\GameDataSource.cpp" />
     <ClCompile Include="Imgui\imgui.cpp" />
     <ClCompile Include="Imgui\imgui_demo.cpp" />
@@ -141,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ESP\ConsoleESP.h" />
+    <ClInclude Include="ESP\UnitESP.h" />
     <ClInclude Include="Game\GameDataSource.h" />
     <ClInclude Include="Game\GameTypes.h" />
     <ClInclude Include="Game\IGameDataSource.h" />

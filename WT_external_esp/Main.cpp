@@ -1,4 +1,3 @@
-// GameDataSource - реальные данные
 #include "Game/GameDataSource.h"
 
 #include "Memory/MemoryManager.h"
@@ -8,8 +7,11 @@
 
 #include "Overlay/Overlay.h"
 
+#include "ESP/UnitESP.h"
+
+#include <Windows.h>
 #include <iostream>
-#include <vector>
+#include <cstdint>
 
 
 int main()
@@ -25,7 +27,7 @@ int main()
         L"aces.exe"))
     {
         std::cout
-            << "Memory initialization failed\n";
+            << "[MAIN] Memory initialization failed\n";
 
         return 1;
     }
@@ -58,7 +60,7 @@ int main()
     if (!hwndGame)
     {
         std::cout
-            << "Game window not found\n";
+            << "[MAIN] Game window not found\n";
 
         return 1;
     }
@@ -75,7 +77,7 @@ int main()
 
 
     // ========================================================
-    // 3. GET WINDOW RECT
+    // 3. GET GAME CLIENT RECT
     // ========================================================
 
     RECT overlayRect{};
@@ -86,7 +88,7 @@ int main()
         overlayRect))
     {
         std::cout
-            << "Failed to get client rect\n";
+            << "[MAIN] Failed to get client rect\n";
 
         return 1;
     }
@@ -118,7 +120,14 @@ int main()
 
 
     // ========================================================
-    // 5. OVERLAY
+    // 5. ESP
+    // ========================================================
+
+    UnitESP unitESP;
+
+
+    // ========================================================
+    // 6. OVERLAY
     // ========================================================
 
     Overlay overlay;
@@ -130,14 +139,14 @@ int main()
         SW_SHOWNOACTIVATE))
     {
         std::cout
-            << "Overlay initialization failed\n";
+            << "[MAIN] Overlay initialization failed\n";
 
         return 1;
     }
 
 
     // ========================================================
-    // 6. RENDER LOOP
+    // 7. RENDER LOOP
     // ========================================================
 
     bool running = true;
@@ -176,24 +185,37 @@ int main()
 
 
         // ----------------------------------------------------
+        // OPTIONAL:
+        // если окно игры закрыли
+        // ----------------------------------------------------
+
+        if (!IsWindow(hwndGame))
+        {
+            std::cout
+                << "[MAIN] Game window closed\n";
+
+            break;
+        }
+
+
+        // ----------------------------------------------------
         // BEGIN FRAME
         // ----------------------------------------------------
 
         overlay.BeginRender();
 
 
-        // ----------------------------------------------------
-        // READ LOCAL DATA
-        // ----------------------------------------------------
+        // ====================================================
+        // READ GAME DATA
+        // ====================================================
 
-        Vector3 worldPosition{};
+        Vector3 localPosition{};
         Matrix4x4 viewMatrix{};
-        Vector2 screenPosition{};
 
 
         const bool positionOk =
             gameData.GetLocalPosition(
-                worldPosition
+                localPosition
             );
 
 
@@ -203,252 +225,87 @@ int main()
             );
 
 
-        // ----------------------------------------------------
-        // READ ALL 3 UNIT LISTS
-        // ----------------------------------------------------
-
-        const auto units1 =
-            gameData.GetUnitsList1();
-
-
-        const auto units2 =
-            gameData.GetUnitsList2();
-
-
-        const auto units3 =
-            gameData.GetUnitsList3();
-
         const std::uintptr_t localUnitAddress =
             gameData.GetLocalUnitAddress();
 
-        // ----------------------------------------------------
-        // LOCAL PLAYER WORLD -> SCREEN
-        // ----------------------------------------------------
 
-        bool visible = false;
+        // —ейчас используем именно List2,
+        // потому что в нЄм нашли наземную технику
+        // и локальный Unit.
+        const auto units =
+            gameData.GetUnitsList3();
 
 
-        if (positionOk && matrixOk)
+        // ====================================================
+        // ESP RENDER
+        // ====================================================
+
+        if (positionOk &&
+            matrixOk &&
+            localUnitAddress != 0)
         {
             const ImVec2 displaySize =
                 ImGui::GetIO().DisplaySize;
 
 
-            visible =
-                Math::WorldToScreen(
-                    worldPosition,
-                    screenPosition,
-                    viewMatrix,
-                    displaySize.x,
-                    displaySize.y
-                );
-
-
-            if (visible)
-            {
-                ImGui::GetBackgroundDrawList()
-                    ->AddCircleFilled(
-                        ImVec2(
-                            screenPosition.x,
-                            screenPosition.y
-                        ),
-                        8.0f,
-                        IM_COL32(
-                            255,
-                            0,
-                            0,
-                            255
-                        )
-                    );
-            }
-        }
-        
-        int drawnUnits = 0;
-
-        if (matrixOk && localUnitAddress != 0)
-        {
-            const ImVec2 displaySize =
-                ImGui::GetIO().DisplaySize;
-
-            for (const UnitInfo& unit : units2)
-            {
-                // Ќе рисуем собственную технику
-                if (unit.id == localUnitAddress)
-                    continue;
-
-                Vector2 unitScreen{};
-
-                const bool unitVisible =
-                    Math::WorldToScreen(
-                        unit.position,
-                        unitScreen,
-                        viewMatrix,
-                        displaySize.x,
-                        displaySize.y
-                    );
-
-                if (!unitVisible)
-                    continue;
-
-                ImGui::GetBackgroundDrawList()
-                    ->AddCircleFilled(
-                        ImVec2(
-                            unitScreen.x,
-                            unitScreen.y
-                        ),
-                        6.0f,
-                        IM_COL32(
-                            255,
-                            255,
-                            0,
-                            255
-                        )
-                    );
-                ++drawnUnits;
-            }
+            unitESP.Render(
+                units,
+                localUnitAddress,
+                localPosition,
+                viewMatrix,
+                displaySize.x,
+                displaySize.y
+            );
         }
 
 
-        // ----------------------------------------------------
+        // ====================================================
         // DEBUG CONSOLE
-        // ----------------------------------------------------
+        // ====================================================
 
         static ULONGLONG lastDebugTime = 0;
-
 
         const ULONGLONG now =
             GetTickCount64();
 
 
-        if (now - lastDebugTime >= 500)
+        if (now - lastDebugTime >= 1000)
         {
             lastDebugTime = now;
 
 
-            // =================================================
-            // MAIN INFO
-            // =================================================
-
             std::cout
-                << "\nWORLD: "
-                << "X=" << worldPosition.x
-                << " Y=" << worldPosition.y
-                << " Z=" << worldPosition.z
-
-                << " | PositionOK="
+                << "[DEBUG]"
+                << " PositionOK="
                 << std::boolalpha
                 << positionOk
 
                 << " | MatrixOK="
                 << matrixOk
 
-                << " | W2S="
-                << visible
+                << " | LocalUnit=0x"
+                << std::hex
+                << localUnitAddress
+                << std::dec
 
-                << " | List1="
-                << units1.size()
-
-                << " | List2="
-                << units2.size()
-
-                << " | List3="
-                << units3.size()
-
-                << " | DrawnUnits="
-                << drawnUnits;
+                << " | Units="
+                << units.size();
 
 
-            if (visible)
+            if (positionOk)
             {
                 std::cout
-                    << " | SCREEN: X="
-                    << screenPosition.x
-
-                    << " Y="
-                    << screenPosition.y;
+                    << " | LocalPos=("
+                    << localPosition.x
+                    << ", "
+                    << localPosition.y
+                    << ", "
+                    << localPosition.z
+                    << ")";
             }
 
 
             std::cout << '\n';
-
-
-            // =================================================
-            // HELPER FOR PRINTING UNIT LIST
-            // =================================================
-
-            auto printUnits =
-                [](
-                    const char* listName,
-                    const std::vector<UnitInfo>& units)
-                {
-                    std::cout
-                        << "\n========== "
-                        << listName
-                        << " ==========\n";
-
-
-                    for (std::size_t i = 0;
-                        i < units.size();
-                        ++i)
-                    {
-                        const UnitInfo& unit =
-                            units[i];
-
-
-                        std::cout
-                            << "[" << i << "]"
-
-                            << " Address=0x"
-                            << std::hex
-                            << unit.id
-                            << std::dec
-
-                            << " | Team="
-                            << unit.team
-
-                            << " | Type="
-                            << unit.type
-
-                            << " | State="
-                            << unit.state
-
-                            << " | Pos=("
-                            << unit.position.x
-                            << ", "
-                            << unit.position.y
-                            << ", "
-                            << unit.position.z
-                            << ")"
-
-                            << '\n';
-                    }
-
-
-                    std::cout
-                        << "============================\n";
-                };
-
-
-            // =================================================
-            // PRINT ALL LISTS
-            // =================================================
-
-            printUnits(
-                "LIST 1",
-                units1
-            );
-
-
-            printUnits(
-                "LIST 2",
-                units2
-            );
-
-
-            printUnits(
-                "LIST 3",
-                units3
-            );
         }
 
 
@@ -461,7 +318,7 @@ int main()
 
 
     // ========================================================
-    // 7. CLEANUP
+    // 8. CLEANUP
     // ========================================================
 
     overlay.Shutdown();
