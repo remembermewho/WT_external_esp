@@ -125,18 +125,42 @@
   <ItemGroup>
     <ClCompile Include="ESP\ConsoleESP.cpp" />
     <ClCompile Include="Game\GameDataSource.cpp" />
+    <ClCompile Include="Imgui\imgui.cpp" />
+    <ClCompile Include="Imgui\imgui_demo.cpp" />
+    <ClCompile Include="Imgui\imgui_draw.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="Imgui\imgui_tables.cpp" />
+    <ClCompile Include="Imgui\imgui_widgets.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Memory\MemoryManager.cpp" />
+    <ClCompile Include="Overlay\Menu.cpp" />
+    <ClCompile Include="Overlay\Overlay.cpp" />
     <ClCompile Include="Utils\ExternMath.cpp" />
+    <ClCompile Include="Utils\WindowUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ESP\ConsoleESP.h" />
     <ClInclude Include="Game\GameDataSource.h" />
     <ClInclude Include="Game\GameTypes.h" />
     <ClInclude Include="Game\IGameDataSource.h" />
+    <ClInclude Include="Imgui\imconfig.h" />
+    <ClInclude Include="Imgui\imgui.h" />
+    <ClInclude Include="Imgui\imgui_impl_dx11.h" />
+    <ClInclude Include="Imgui\imgui_impl_win32.h" />
+    <ClInclude Include="Imgui\imgui_internal.h" />
+    <ClInclude Include="Imgui\imstb_rectpack.h" />
+    <ClInclude Include="Imgui\imstb_textedit.h" />
+    <ClInclude Include="Imgui\imstb_truetype.h" />
     <ClInclude Include="Memory\MemoryManager.h" />
     <ClInclude Include="Offsets\Offsets.h" />
+    <ClInclude Include="Overlay\Menu.h" />
+    <ClInclude Include="Overlay\Overlay.h" />
     <ClInclude Include="Utils\ExternMath.h" />
+    <ClInclude Include="Utils\WindowUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Imgui\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

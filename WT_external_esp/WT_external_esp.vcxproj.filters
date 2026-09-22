@@ -28,6 +28,12 @@
     <Filter Include="Исходные файлы\Utils">
       <UniqueIdentifier>{2c5bd6ac-6a2d-409b-861d-f8929e84ddcc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\Overlay">
+      <UniqueIdentifier>{e2f6f530-8634-44ef-87c5-264fe0931adf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Imgui">
+      <UniqueIdentifier>{1eadfa4e-43fb-4a3e-8c0d-6626b804f8c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -43,6 +49,36 @@
       <Filter>Исходные файлы\Memory</Filter>
     </ClCompile>
     <ClCompile Include="Utils\ExternMath.cpp">
+      <Filter>Исходные файлы\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlay\Menu.cpp">
+      <Filter>Исходные файлы\Overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlay\Overlay.cpp">
+      <Filter>Исходные файлы\Overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_demo.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_draw.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_impl_dx11.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_impl_win32.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_tables.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui_widgets.cpp">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\WindowUtils.cpp">
       <Filter>Исходные файлы\Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,5 +104,43 @@
     <ClInclude Include="Utils\ExternMath.h">
       <Filter>Исходные файлы\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Overlay\Menu.h">
+      <Filter>Исходные файлы\Overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="Overlay\Overlay.h">
+      <Filter>Исходные файлы\Overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imconfig.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imgui.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imgui_impl_dx11.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imgui_impl_win32.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imgui_internal.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imstb_rectpack.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imstb_textedit.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui\imstb_truetype.h">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\WindowUtils.h">
+      <Filter>Исходные файлы\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Imgui\LICENSE.txt">
+      <Filter>Исходные файлы\Imgui</Filter>
+    </Text>
   </ItemGroup>
 </Project>

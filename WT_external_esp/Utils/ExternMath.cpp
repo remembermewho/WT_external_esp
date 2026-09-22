@@ -33,6 +33,12 @@ bool Math::WorldToScreen(
     const float ndcX = clipX / clipW;
     const float ndcY = clipY / clipW;
 
+    if (ndcX < -1.0f || ndcX > 1.0f ||
+        ndcY < -1.0f || ndcY > 1.0f)
+    {
+        return false;
+    }
+
     // NDC -> pixels
     screen.x =
         (screenWidth * 0.5f) *

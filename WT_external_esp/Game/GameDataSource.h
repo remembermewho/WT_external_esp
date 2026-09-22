@@ -17,6 +17,13 @@ public:
     bool GetLocalPosition(Vector3& position);
     bool GetCameraPosition(Vector3& position);
     bool GetViewMatrix(Matrix4x4& matrix);
+    bool GetLocalPositionViaPlayer(Vector3& position);
+
+    std::uintptr_t GetLocalUnitAddress();
+
+    std::vector<UnitInfo> GetUnitsList1();
+    std::vector<UnitInfo> GetUnitsList2();
+    std::vector<UnitInfo> GetUnitsList3();
 private:
     MemoryManager& memory;
 
@@ -32,5 +39,8 @@ private:
     // Проверить, что полученные данные выглядят адекватно.
     bool IsUnitValid(const UnitInfo& unit) const;
 
-    
+    std::vector<UnitInfo> GetUnitsFromList(
+        std::ptrdiff_t listOffset,
+        std::ptrdiff_t countOffset
+    );
 };

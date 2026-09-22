@@ -30,7 +30,7 @@ std::uintptr_t GameDataSource::GetGameContext() // // Получение ука�
         return 0;
     }
 
-    std::cout
+    /*std::cout
         << "[DEBUG] BaseAddress: 0x"
         << std::hex << baseAddress
         << '\n';
@@ -44,7 +44,7 @@ std::uintptr_t GameDataSource::GetGameContext() // // Получение ука�
         << "[DEBUG] GameContext: 0x"
         << std::hex << gameContext
         << std::dec
-        << '\n';
+        << '\n';*/
 
     if (gameContext == 0)
     {
@@ -106,7 +106,7 @@ bool GameDataSource::GetUnitList(std::uintptr_t gameContext, std::uintptr_t& uni
         return false;
     }
 
-    std::cout
+    /*std::cout
         << "[DEBUG] UnitList field address: 0x"
         << std::hex << unitListFieldAddress
         << '\n';
@@ -124,7 +124,7 @@ bool GameDataSource::GetUnitList(std::uintptr_t gameContext, std::uintptr_t& uni
     std::cout
         << "[DEBUG] UnitCount: "
         << std::dec << unitCount
-        << '\n';
+        << '\n';*/
 
     if (unitList == 0)
     {
@@ -180,7 +180,7 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
         return false;
     }
 
-    std::cout
+    /*std::cout
         << "[DEBUG] Unit 0x"
         << std::hex << unitAddress
         << std::dec
@@ -188,7 +188,7 @@ bool GameDataSource::ReadUnit(std::uintptr_t unitAddress, UnitInfo& outUnit)
         << "X=" << outUnit.position.x
         << " Y=" << outUnit.position.y
         << " Z=" << outUnit.position.z
-        << '\n';
+        << '\n';*/
 
 
 
@@ -313,7 +313,7 @@ std::vector<UnitInfo> GameDataSource::GetUnits()
     if (gameContext == 0)
         return units;
 
-    std::cout << "[GameDataSource] GameContext: 0x" << std::hex << gameContext << std::dec << '\n';
+    //std::cout << "[GameDataSource] GameContext: 0x" << std::hex << gameContext << std::dec << '\n';
 
     // ========================================================
     // 2. UnitList + UnitCount
@@ -327,9 +327,9 @@ std::vector<UnitInfo> GameDataSource::GetUnits()
         return units;
     }
 
-    std::cout << "[GameDataSource] UnitList: 0x" << std::hex << unitList << std::dec << '\n';
+    //std::cout << "[GameDataSource] UnitList: 0x" << std::hex << unitList << std::dec << '\n';
 
-    std::cout << "[GameDataSource] UnitCount: " << unitCount << '\n';
+    //std::cout << "[GameDataSource] UnitCount: " << unitCount << '\n';
 
     units.reserve(unitCount);
 
@@ -360,14 +360,14 @@ std::vector<UnitInfo> GameDataSource::GetUnits()
             continue;
         }
 
-        std::cout
+        /*std::cout
             << "[DEBUG] Unit[" << i << "]"
             << " elementAddress=0x"
             << std::hex << elementAddress
             << " -> unitAddress=0x"
             << unitAddress
             << std::dec
-            << '\n';
+            << '\n';*/
 
         if (unitAddress == 0)
             continue;
@@ -392,44 +392,292 @@ std::vector<UnitInfo> GameDataSource::GetUnits()
     return units;
 }
 
+std::uintptr_t GameDataSource::GetLocalUnitAddress()
+{
+    if (!memory.IsValid())
+        return 0;
+
+    const std::uintptr_t baseAddress =
+        memory.GetBaseAddress();
+
+    const std::uintptr_t myUnitGlobalAddress =
+        baseAddress + offsets::Global::g_MyUnit;
+
+    std::uintptr_t myUnit = 0;
+
+    if (!memory.Read(
+        myUnitGlobalAddress,
+        myUnit))
+    {
+        return 0;
+    }
+
+    return myUnit;
+}
 
 bool GameDataSource::GetLocalPosition(Vector3& position)
 {
     if (!memory.IsValid())
         return false;
 
-    const std::uintptr_t baseAddress = memory.GetBaseAddress();
+    const std::uintptr_t myUnit =
+        GetLocalUnitAddress();
 
-    std::uintptr_t myUnit = 0;
-
-    // global pointer -> Unit*
-    if (!memory.Read(baseAddress + offsets::Global::g_MyUnit, myUnit))
+    if (myUnit == 0)
     {
-        std::cout << "[LOCAL] Failed to read MyUnit\n";
-
         return false;
     }
 
     if (myUnit == 0)
     {
-        std::cout << "[LOCAL] MyUnit = nullptr\n";
+        std::cout
+            << "[MYUNIT] Unit is null\n";
 
         return false;
     }
 
-    std::cout << "[LOCAL] MyUnit: 0x" << std::hex << myUnit << std::dec << '\n';
+    const std::uintptr_t positionAddress =
+        myUnit + offsets::Unit::m_Position;
 
-    // Unit + Position member
-    if (!memory.Read(myUnit + offsets::Unit::m_Position, position))
+    Vector3 tempPosition{};
+
+    if (!memory.Read(
+        positionAddress,
+        tempPosition))
     {
-        std::cout << "[LOCAL] Failed to read position\n";
+        std::cout
+            << "[MYUNIT] Failed to read Position\n";
 
         return false;
     }
+
+
+    if (!std::isfinite(tempPosition.x) ||
+        !std::isfinite(tempPosition.y) ||
+        !std::isfinite(tempPosition.z))
+    {
+        std::cout
+            << "[MYUNIT] Position contains NaN/Inf\n";
+
+        return false;
+    }
+
+    constexpr float maxCoordinate =
+        1'000'000.0f;
+
+    if (std::abs(tempPosition.x) > maxCoordinate ||
+        std::abs(tempPosition.y) > maxCoordinate ||
+        std::abs(tempPosition.z) > maxCoordinate)
+    {
+        std::cout
+            << "[MYUNIT] Position looks invalid\n";
+
+        return false;
+    }
+
+    position = tempPosition;
 
     return true;
 }
 
+bool GameDataSource::GetLocalPositionViaPlayer(Vector3& position)
+{
+    if (!memory.IsValid())
+        return false;
+
+    const std::uintptr_t baseAddress =
+        memory.GetBaseAddress();
+
+
+    // ========================================================
+    // 1. ADDRESS OF g_LocalPlayer
+    // ========================================================
+
+    const std::uintptr_t localPlayerGlobalAddress =
+        baseAddress + offsets::Global::g_LocalPlayer;
+
+
+    std::cout
+        << "[LOCAL2] g_LocalPlayer address: 0x"
+        << std::hex
+        << localPlayerGlobalAddress
+        << std::dec
+        << '\n';
+
+
+    // ========================================================
+    // 2. READ g_LocalPlayer
+    // ========================================================
+
+    std::uintptr_t localPlayer = 0;
+
+    if (!memory.Read(
+        localPlayerGlobalAddress,
+        localPlayer))
+    {
+        std::cout
+            << "[LOCAL2] Failed to read g_LocalPlayer"
+            << " | WinError="
+            << GetLastError()
+            << '\n';
+
+        return false;
+    }
+
+
+    std::cout
+        << "[LOCAL2] LocalPlayer value: 0x"
+        << std::hex
+        << localPlayer
+        << std::dec
+        << '\n';
+
+
+    if (localPlayer == 0)
+    {
+        std::cout
+            << "[LOCAL2] LocalPlayer is null\n";
+
+        return false;
+    }
+
+
+    // ========================================================
+    // 3. ADDRESS OF m_ControlledUnit
+    // ========================================================
+
+    const std::uintptr_t controlledUnitFieldAddress =
+        localPlayer +
+        offsets::Player::m_ControlledUnit;
+
+
+    std::cout
+        << "[LOCAL2] ControlledUnit field address: 0x"
+        << std::hex
+        << controlledUnitFieldAddress
+        << std::dec
+        << '\n';
+
+
+    // ========================================================
+    // 4. READ ControlledUnit*
+    // ========================================================
+
+    std::uintptr_t controlledUnit = 0;
+
+    if (!memory.Read(
+        controlledUnitFieldAddress,
+        controlledUnit))
+    {
+        const DWORD error =
+            GetLastError();
+
+        std::cout
+            << "[LOCAL2] Failed to read ControlledUnit"
+            << " | WinError="
+            << error
+            << '\n';
+
+        return false;
+    }
+
+
+    std::cout
+        << "[LOCAL2] ControlledUnit value: 0x"
+        << std::hex
+        << controlledUnit
+        << std::dec
+        << '\n';
+
+
+    if (controlledUnit == 0)
+    {
+        std::cout
+            << "[LOCAL2] ControlledUnit is null\n";
+
+        return false;
+    }
+
+
+    // ========================================================
+    // 5. POSITION ADDRESS
+    // ========================================================
+
+    const std::uintptr_t positionAddress =
+        controlledUnit +
+        offsets::Unit::m_Position;
+
+
+    std::cout
+        << "[LOCAL2] Position address: 0x"
+        << std::hex
+        << positionAddress
+        << std::dec
+        << '\n';
+
+
+    // ========================================================
+    // 6. READ POSITION
+    // ========================================================
+
+    Vector3 tempPosition{};
+
+    if (!memory.Read(
+        positionAddress,
+        tempPosition))
+    {
+        std::cout
+            << "[LOCAL2] Failed to read Position"
+            << " | WinError="
+            << GetLastError()
+            << '\n';
+
+        return false;
+    }
+
+
+    std::cout
+        << "[LOCAL2] RAW POSITION: "
+        << "X=" << tempPosition.x
+        << " Y=" << tempPosition.y
+        << " Z=" << tempPosition.z
+        << '\n';
+
+
+    // ========================================================
+    // 7. VALIDATE POSITION
+    // ========================================================
+
+    if (!std::isfinite(tempPosition.x) ||
+        !std::isfinite(tempPosition.y) ||
+        !std::isfinite(tempPosition.z))
+    {
+        std::cout
+            << "[LOCAL2] Position contains NaN/Inf\n";
+
+        return false;
+    }
+
+
+    constexpr float maxCoordinate =
+        1'000'000.0f;
+
+
+    if (std::abs(tempPosition.x) > maxCoordinate ||
+        std::abs(tempPosition.y) > maxCoordinate ||
+        std::abs(tempPosition.z) > maxCoordinate)
+    {
+        std::cout
+            << "[LOCAL2] Position looks invalid\n";
+
+        return false;
+    }
+
+
+    position = tempPosition;
+
+    return true;
+}
 
 bool GameDataSource::GetCameraPosition(Vector3& position)
 {
@@ -478,12 +726,12 @@ bool GameDataSource::GetViewMatrix(Matrix4x4& matrix)
     const std::uintptr_t matrixAddress =
         baseAddress + offsets::Global::g_ViewMatrix;
 
-    std::cout
+    /*std::cout
         << "[VIEW] MatrixAddress: 0x"
         << std::hex
         << matrixAddress
         << std::dec
-        << '\n';
+        << '\n';*/
 
     if (!memory.Read(matrixAddress, matrix))
     {
@@ -494,4 +742,124 @@ bool GameDataSource::GetViewMatrix(Matrix4x4& matrix)
     }
 
     return true;
+}
+
+std::vector<UnitInfo> GameDataSource::GetUnitsFromList(
+    std::ptrdiff_t listOffset,
+    std::ptrdiff_t countOffset)
+{
+    std::vector<UnitInfo> units;
+
+    if (!memory.IsValid())
+        return units;
+
+    const std::uintptr_t gameContext =
+        GetGameContext();
+
+    if (gameContext == 0)
+        return units;
+
+
+    std::uintptr_t unitList = 0;
+    std::uint16_t unitCount = 0;
+
+
+    if (!memory.Read(
+        gameContext + listOffset,
+        unitList))
+    {
+        return units;
+    }
+
+
+    if (!memory.Read(
+        gameContext + countOffset,
+        unitCount))
+    {
+        return units;
+    }
+
+
+    if (unitList == 0 ||
+        unitCount == 0 ||
+        unitCount > 1024)
+    {
+        return units;
+    }
+
+
+    units.reserve(unitCount);
+
+
+    for (std::uint16_t i = 0;
+        i < unitCount;
+        ++i)
+    {
+        const std::uintptr_t elementAddress =
+            unitList +
+            static_cast<std::uintptr_t>(i) *
+            sizeof(std::uintptr_t);
+
+
+        std::uintptr_t unitAddress = 0;
+
+
+        if (!memory.Read(
+            elementAddress,
+            unitAddress))
+        {
+            continue;
+        }
+
+
+        if (unitAddress == 0)
+            continue;
+
+
+        UnitInfo unit{};
+
+
+        if (!ReadUnit(
+            unitAddress,
+            unit))
+        {
+            continue;
+        }
+
+
+        if (!IsUnitValid(unit))
+            continue;
+
+
+        units.push_back(unit);
+    }
+
+
+    return units;
+}
+
+std::vector<UnitInfo> GameDataSource::GetUnitsList1()
+{
+    return GetUnitsFromList(
+        offsets::Game::m_UnitList1,
+        offsets::Game::m_UnitCount1
+    );
+}
+
+
+std::vector<UnitInfo> GameDataSource::GetUnitsList2()
+{
+    return GetUnitsFromList(
+        offsets::Game::m_UnitList2,
+        offsets::Game::m_UnitCount2
+    );
+}
+
+
+std::vector<UnitInfo> GameDataSource::GetUnitsList3()
+{
+    return GetUnitsFromList(
+        offsets::Game::m_UnitList3,
+        offsets::Game::m_UnitCount3
+    );
 }
