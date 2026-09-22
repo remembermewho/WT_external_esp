@@ -398,44 +398,31 @@ bool GameDataSource::GetLocalPosition(Vector3& position)
     if (!memory.IsValid())
         return false;
 
-    const std::uintptr_t baseAddress =
-        memory.GetBaseAddress();
+    const std::uintptr_t baseAddress = memory.GetBaseAddress();
 
     std::uintptr_t myUnit = 0;
 
     // global pointer -> Unit*
-    if (!memory.Read(
-        baseAddress + offsets::Global::g_MyUnit,
-        myUnit))
+    if (!memory.Read(baseAddress + offsets::Global::g_MyUnit, myUnit))
     {
-        std::cout
-            << "[LOCAL] Failed to read MyUnit\n";
+        std::cout << "[LOCAL] Failed to read MyUnit\n";
 
         return false;
     }
 
     if (myUnit == 0)
     {
-        std::cout
-            << "[LOCAL] MyUnit = nullptr\n";
+        std::cout << "[LOCAL] MyUnit = nullptr\n";
 
         return false;
     }
 
-    std::cout
-        << "[LOCAL] MyUnit: 0x"
-        << std::hex
-        << myUnit
-        << std::dec
-        << '\n';
+    std::cout << "[LOCAL] MyUnit: 0x" << std::hex << myUnit << std::dec << '\n';
 
     // Unit + Position member
-    if (!memory.Read(
-        myUnit + offsets::Unit::m_Position,
-        position))
+    if (!memory.Read(myUnit + offsets::Unit::m_Position, position))
     {
-        std::cout
-            << "[LOCAL] Failed to read position\n";
+        std::cout << "[LOCAL] Failed to read position\n";
 
         return false;
     }
@@ -446,45 +433,33 @@ bool GameDataSource::GetLocalPosition(Vector3& position)
 
 bool GameDataSource::GetCameraPosition(Vector3& position)
 {
-    const std::uintptr_t gameContext =
-        GetGameContext();
+    const std::uintptr_t gameContext = GetGameContext();
 
     if (gameContext == 0)
         return false;
 
     std::uintptr_t camera = 0;
 
-    if (!memory.Read(
-        gameContext + offsets::Game::m_CameraCont,
-        camera))
+    if (!memory.Read(gameContext + offsets::Game::m_CameraCont, camera))
     {
-        std::cout
-            << "[CAMERA] Failed to read CameraCont\n";
+        std::cout << "[CAMERA] Failed to read CameraCont\n";
 
         return false;
     }
 
     if (camera == 0)
     {
-        std::cout
-            << "[CAMERA] Camera = nullptr\n";
+        std::cout << "[CAMERA] Camera = nullptr\n";
 
         return false;
     }
 
-    std::cout
-        << "[CAMERA] Camera: 0x"
-        << std::hex
-        << camera
-        << std::dec
+    std::cout << "[CAMERA] Camera: 0x" << std::hex << camera << std::dec
         << '\n';
 
-    if (!memory.Read(
-        camera + offsets::Camera::m_CameraPos,
-        position))
+    if (!memory.Read(camera + offsets::Camera::m_CameraPos, position))
     {
-        std::cout
-            << "[CAMERA] Failed to read position\n";
+        std::cout << "[CAMERA] Failed to read position\n";
 
         return false;
     }
@@ -492,3 +467,31 @@ bool GameDataSource::GetCameraPosition(Vector3& position)
     return true;
 }
 
+bool GameDataSource::GetViewMatrix(Matrix4x4& matrix)
+{
+    if (!memory.IsValid())
+        return false;
+
+    const std::uintptr_t baseAddress =
+        memory.GetBaseAddress();
+
+    const std::uintptr_t matrixAddress =
+        baseAddress + offsets::Global::g_ViewMatrix;
+
+    std::cout
+        << "[VIEW] MatrixAddress: 0x"
+        << std::hex
+        << matrixAddress
+        << std::dec
+        << '\n';
+
+    if (!memory.Read(matrixAddress, matrix))
+    {
+        std::cout
+            << "[VIEW] Failed to read matrix\n";
+
+        return false;
+    }
+
+    return true;
+}

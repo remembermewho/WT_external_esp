@@ -2,6 +2,8 @@
 #include "Game/GameDataSource.h" // GameDataSource - реальные данные
 #include "ESP/ConsoleESP.h"
 #include "Memory/MemoryManager.h"
+#include "Utils/ExternMath.h"
+
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -28,44 +30,88 @@ int main()
     GameDataSource gameData(memory);
     ConsoleESP esp;
 
+      
     while (true)
     {   
+        
         system("cls");
-        //test comment
+
         Vector3 localPosition{};
-        Vector3 cameraPosition{};
+        Matrix4x4 matrix{};
+        Vector2 screenPosition{};
+
+        constexpr float screenWidth = 1920.0f;
+        constexpr float screenHeight = 1080.0f;
 
         std::cout
-            << "\n========================================\n"
+            << "========================================\n"
             << "            NEW UPDATE\n"
             << "========================================\n";
 
-        //esp.Update(gameData);
+        const bool positionOk =
+            gameData.GetLocalPosition(localPosition);
 
-        if (gameData.GetLocalPosition(localPosition))
+        const bool matrixOk =
+            gameData.GetViewMatrix(matrix);
+
+        if (positionOk)
         {
             std::cout
-                << "LOCAL POSITION:\n"
+                << "\nWORLD POSITION:\n"
                 << "X = " << localPosition.x << '\n'
                 << "Y = " << localPosition.y << '\n'
                 << "Z = " << localPosition.z << '\n';
         }
-
-        std::cout << '\n';
-
-        if (gameData.GetCameraPosition(cameraPosition))
+        else
         {
-            std::cout
-                << "CAMERA POSITION:\n"
-                << "X = " << cameraPosition.x << '\n'
-                << "Y = " << cameraPosition.y << '\n'
-                << "Z = " << cameraPosition.z << '\n';
+            std::cout << "\nWORLD POSITION: READ FAILED\n";
+        }
+
+        if (positionOk && matrixOk)
+        {
+            const bool visible =
+                Math::WorldToScreen(
+                    localPosition,
+                    screenPosition,
+                    matrix,
+                    screenWidth,
+                    screenHeight
+                );
+
+            if (visible)
+            {
+                std::cout
+                    << "\nSCREEN POSITION:\n"
+                    << "X = " << screenPosition.x << '\n'
+                    << "Y = " << screenPosition.y << '\n';
+
+                const bool onScreen =
+                    screenPosition.x >= 0.0f &&
+                    screenPosition.x <= screenWidth &&
+                    screenPosition.y >= 0.0f &&
+                    screenPosition.y <= screenHeight;
+
+                std::cout
+                    << "On screen = "
+                    << std::boolalpha
+                    << onScreen
+                    << '\n';
+            }
+            else
+            {
+                std::cout
+                    << "\nWorldToScreen: point is behind camera\n";
+            }
         }
 
         std::this_thread::sleep_for(
             std::chrono::seconds(2)
         );
-    }
+	}
+        
+
+        
+    
 
     return 0;
 }

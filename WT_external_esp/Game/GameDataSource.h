@@ -16,7 +16,7 @@ public:
 
     bool GetLocalPosition(Vector3& position);
     bool GetCameraPosition(Vector3& position);
-
+    bool GetViewMatrix(Matrix4x4& matrix);
 private:
     MemoryManager& memory;
 
@@ -32,5 +32,5 @@ private:
     // Проверить, что полученные данные выглядят адекватно.
     bool IsUnitValid(const UnitInfo& unit) const;
 
-
+    
 };

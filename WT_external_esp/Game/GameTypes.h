@@ -24,3 +24,16 @@ struct UnitInfo
 
 	std::string name;
 };
+
+
+struct Vector2
+{
+	float x{};
+	float y{};
+};
+
+struct Matrix4x4
+{
+	float m[16]{};
+};
+
